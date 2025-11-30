@@ -1400,10 +1400,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="invoiceContact">العميل/المورد</label>
-                            <select id="invoiceContact" name="contact_id" required>
-                                <option value="">اختر العميل/المورد</option>
-                            </select>
+                            <label for="invoiceContact">اسم العميل/المورد</label>
+                            <input type="text" id="invoiceContact" name="contact_name" placeholder="أدخل اسم العميل أو المورد" required>
                         </div>
                     </div>
                     
@@ -1926,7 +1924,6 @@
             // تحديث الفواتير الأخيرة
             updateRecentInvoices(invoices) {
                 const tbody = document.getElementById('recentInvoicesTable');
-                const customers = Storage.getAll(Storage.KEYS.CUSTOMERS);
                 
                 tbody.innerHTML = '';
                 
@@ -1946,13 +1943,12 @@
                 }
                 
                 invoices.forEach((invoice, index) => {
-                    const customer = customers.find(c => c.id === invoice.contact_id) || { name: 'غير معروف' };
                     const row = document.createElement('tr');
                     row.style.animationDelay = `${index * 0.1}s`;
                     row.classList.add('fade-in');
                     row.innerHTML = `
                         <td>${invoice.invoice_number}</td>
-                        <td>${customer.name}</td>
+                        <td>${invoice.contact_name}</td>
                         <td>${Utils.formatDate(invoice.issue_date)}</td>
                         <td>${Utils.formatCurrency(invoice.total_amount)}</td>
                         <td><span class="status-badge ${invoice.status}">${Invoices.getStatusText(invoice.status)}</span></td>
@@ -1988,7 +1984,6 @@
             // عرض الفواتير في الجدول
             displayInvoices(invoices) {
                 const tbody = document.getElementById('invoicesTable');
-                const customers = Storage.getAll(Storage.KEYS.CUSTOMERS);
                 
                 tbody.innerHTML = '';
                 
@@ -2008,14 +2003,13 @@
                 }
                 
                 invoices.forEach((invoice, index) => {
-                    const customer = customers.find(c => c.id === invoice.contact_id) || { name: 'غير معروف' };
                     const row = document.createElement('tr');
                     row.style.animationDelay = `${index * 0.05}s`;
                     row.classList.add('fade-in');
                     row.innerHTML = `
                         <td>${invoice.invoice_number}</td>
                         <td>${invoice.type === 'sale' ? 'بيع' : 'شراء'}</td>
-                        <td>${customer.name}</td>
+                        <td>${invoice.contact_name}</td>
                         <td>${Utils.formatDate(invoice.issue_date)}</td>
                         <td>${Utils.formatDate(invoice.due_date)}</td>
                         <td>${Utils.formatCurrency(invoice.total_amount)}</td>
@@ -2042,19 +2036,9 @@
 
             // عرض نافذة إنشاء فاتورة
             showCreateModal() {
-                this.loadCustomersForInvoice();
                 this.loadProductsForInvoice();
                 this.resetInvoiceForm();
                 this.showModal('createInvoiceModal');
-            },
-
-            // تحميل العملاء للفاتورة
-            loadCustomersForInvoice() {
-                const customers = Storage.getAll(Storage.KEYS.CUSTOMERS);
-                const select = document.getElementById('invoiceContact');
-                if (select) {
-                    Utils.populateSelect(select, customers, 'id', 'name', 'اختر العميل/المورد');
-                }
             },
 
             // تحميل المنتجات للفاتورة
@@ -2209,7 +2193,7 @@
                 const invoiceData = {
                     invoice_number: Utils.generateInvoiceNumber(),
                     type: formData.get('type'),
-                    contact_id: parseInt(formData.get('contact_id')),
+                    contact_name: formData.get('contact_name'),
                     issue_date: formData.get('issue_date'),
                     due_date: formData.get('due_date'),
                     status: 'draft',
